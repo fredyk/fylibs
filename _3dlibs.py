@@ -22,10 +22,9 @@
 import math
 import threading, ImageFile, os, random
 from time import sleep, time as now
-##from canvas_lib import *
 from Tkinter import Tk
 from PIL import ImageTk, Image
-##            from PIL import Image, ImageTk
+from subprocess import Popen, PIPE
 from time import time as now
 import time, math, random
 ##from subprocess import PIPE, STDOUT, Popen
@@ -164,14 +163,16 @@ def colours():
 
 class pixels():
 
-    def __init__(self, width=1920, height=None, dev=None):
+    def __init__(self, width=1920, height=None, dev=None, verbose=False):
         init = now()
         height=width*9/16 if not height else height
         self.width, self.height = width, height
-        print;print '[generating colours',
+        if verbose:
+            print;print '[generating colours',
         self.clrs, self.last, self.lasts = colours(), (-1,-1,-1), u''
         self.time = round(now()-init,3)
-        print 'generated', round(now()-init,2),'s ]'
+        if verbose:
+            print 'generated', round(now()-init,2),'s ]'
         self.bytes = Bytes()
         self.rad = 100+int(math.floor(random.random() * abs(height-100)))
         self.pxs = []
@@ -186,10 +187,8 @@ class pixels():
     def px2(self, a, b, c):
         if (a>255) or (b>255) or (c>255):
             a, b, c = min(a, 255), min(b, 255), min(c, 255)
-##            print a, b, c
         if (a<0) or (b<0) or (c<0):
             a, b, c = max(a, 0), max(b, 0), max(c, 0)
-##            print a, b, c
         if (a, b, c) == self.last:
             return self.lasts
         else:
@@ -207,46 +206,36 @@ class pixels():
             for y in xrange(h)
             ]
 
-    def newbitmap(self, w=None, h=None):
-        init=now();print;print '[generating new bitmap',
-##        if self.used:
-####            print 'reuse', len(self.used), 'pxs'
-##            for u in self.used:
-##                self.pxs[u[0]][u[1]] = u'\x00\x00\x00'
-##            self.used = []
-##        else:
+    def newbitmap(self, w=None, h=None, verbose=False):
+        if verbose:
+            init=now();print;print '[generating new bitmap',
         self.toEmpty(w, h)
         self.paintFloor()
-        print 'generated', round(now()-init,2),'s ]'
+        if verbose:
+            print 'generated', round(now()-init,2),'s ]'
 
     def newpx(self, x, y, style, ):
         if not(self.pxs):
             self.newbitmap()
-##        nc = str(x*2000+y)+str(style)
-##        if not nc in self.used:
-##        ((x, y), (style)) = ((x), (y)) if (not(style)and type(y)==tuple) \
-##                            else ((x, y), ( (style) if (style) else (255,0,0)))
         if(y in range(0, len(self.pxs)))and\
              (x in range(0, len(self.pxs[y]))):
             self.pxs[y][x] = self.px2(*style)
-##            if (style <> (0, 0, 0)) and (style<>[0, 0, 0]) and \
-##               not(y, x) in self.used:
-##                self.used.append((y, x))
 
-    def paintCircle(self, center, rad, style=None):
-        init=now();print;print '[painting circle',
+    def paintCircle(self, center, rad, style=None, verbose=False):
+        if verbose:
+            init=now();print;print '[painting circle',
         for y in xrange(center[1]-rad, center[1]+rad):
             for x in xrange(center[0]-rad, center[0]+rad):
                 _dist = dist(x, y, center)
                 if _dist<=rad:
                     self.newpx(x, y, (255, 0, 0) if not style else style)
-        print round(now()-init,2), 's ]'
+        if verbose:
+            print round(now()-init,2), 's ]'
 
     def paintCube(self, origin=(100, 100, 50), dim=(1000, 1000, 1000), \
                   style=(255, 0, 0), rotation=(0, 0, -1), res=[1920,1080]):
         ox, oy, oz = [int(o) for o in origin]
         dx, dy, dz = [int(d) for d in dim]
-    ##    rx, ry, rz = rotation
         center = (cx, cy, cz) = (ox+dx/2.0,
                                 oy+dy/2.0,
                                 oz+dz/2.0)        
@@ -281,7 +270,6 @@ class pixels():
         rx, ry, rz = rotation
         center = (cx, cy, cz) = origin if not center else center
         z = oz
-##        _max = int(36*rad)
         _max = int(math.ceil(2*math.pi*rad))
         a = 0
         for i in xrange(_max):
@@ -304,17 +292,14 @@ class pixels():
                            visor=[res[0]/2.0,
                                   -res[1]*2,
                                   res[1]/2.0], _int=True)
-##            if not (a, b, style) in self.used:
             ns = style if style else (
                     int((nz-oz+rad)*255/float(2*rad)),
                     0,
                     int(255-(nz-oz+rad)*255/float(2*rad))
                    )
-##            print ns
             self.newpx(a, b,
                        ns
                        )
-##                self.used.append((a, b))
         return a
 
     def paintSphere(self, origin=(100, 100, 100), rad=100, \
@@ -323,7 +308,6 @@ class pixels():
         rx, ry, rz = rotation
         step=16
         for i in xrange(0, 180, step/2):
-##            print origin
             rz1 = i/180.0*math.pi
             if not(i%step):
                 self.paintArc(origin, rad, style, rotation=(
@@ -338,7 +322,6 @@ class pixels():
                           style=style,
                           rotation=(0, 0, 0),
                           rot2=rotation, res=res, center=origin)
-##        self.raster()
         return self
 
     def paintFloor(self):
@@ -354,19 +337,15 @@ class pixels():
                                       -self.height*2,
                                       self.height/2.0], _int=True)
                 self.newpx(a, b, (0, 0, 255))
-    
-    def compress(self):
-        for i, _py in enumerate(self.pxs):
-            for j, px in enumerate(_py):
-                if px == [0, 0, 0]:
-                    self.pxs[i][j] = u'\x00\x00\x00'
 
-    def raster(self, filename=None, rangex=None, rangey=None, test=''):
+    def raster(self, filename=None, rangex=None, rangey=None, test='',
+               verbose=False):
         if not(self.pxs):
             self.newbitmap()
         if not(rangex) and not(rangey):
             self.pxst =  bmp_head(len(self.pxs[0]),len(self.pxs))
-            init=now();print;print '[rastering',
+            if verbose:
+                init=now();print;print '[rastering',
             prcnt = 0
             self.pxst+=''.join([
                 ''.join([
@@ -375,8 +354,8 @@ class pixels():
                     ])
                 for p in self.pxs
                 ])
-            print 'rastered', round(now()-init,2), 's ]'
-##            if(filename):
+            if verbose:
+                print 'rastered', round(now()-init,2), 's ]'
             self.writing=True
             bm = gen_bmp(self.pxst, len(self.pxs[0]), len(self.pxs), self.bpp,
                          0, self.bytes, _init=now(), fname=filename,
@@ -384,11 +363,13 @@ class pixels():
 
             bm.start()
 
-    def getImage(self):
-        init = now();print;print '[completing bmp',
+    def getImage(self, verbose=False):
+        if verbose:
+            init = now();print;print '[completing bmp',
         self.st = comp_bmp(self.pxst, self.width, self.height, self.bpp,
                            self.bytes)
-        print 'complete', round(now()-init,3),'s]',
+        if verbose:
+            print 'complete', round(now()-init,3),'s]',
 
         p = ImageFile.Parser()
 
@@ -397,38 +378,9 @@ class pixels():
         im = p.close()
         return im
 
-    def changeImage(self, im):
-        class wind(threading.Thread):
-            
-            def __init__(self, sup):
-                threading.Thread.__init__(self)
-                self.canvas = None
-
-            def run(self):
-                root = Tk()
-                self.canvas = MainWindow(root)
-##                print dir(self.canvas)
-                root.mainloop()
-
-        if not self.w:
-            self.w = wind(self)
-            self.w.start()
-##            self.w.run()
-##        init = now();print;print '[completing bmp',
-##        self.st = comp_bmp(self.pxst, self.width, self.height, self.bpp, self.__bytes)
-##        print 'complete', round(now()-init,3),'s]',
-##
-##        p = ImageFile.Parser()
-##
-##        p.feed(self.st.encode('iso-8859-1'))
-##
-##        im = p.close()
-        while not(self.w.canvas):sleep(0.1)
-##        print dir(self.w.canvas)
-        self.w.canvas.changeImage(im)
-
-    def raw_image(self):
-        print 'generating raw',
+    def raw_image(self, verbose=False):
+        if verbose:
+            print 'generating raw',
         return ''.join([
             ''.join([
                 _p if _p else u'\x00\x00\x00'
@@ -437,10 +389,9 @@ class pixels():
             for p in self.pxs[::-1]
             ])
 
-## This function removes a .bmp image head
+## This function obtains a .bmp image head
 
 def bmp_head(width, height, chanels=3):
-##    print 'w', width, 'h', height
     return 'BM'+rev_num(54+chanels*width*height)+u'\x00\x00\x00\x00'+\
            u'\x36\x00\x00\x00'+\
          u'\x28\x00\x00\x00'+rev_num(width)+rev_num(height)+\
@@ -450,10 +401,11 @@ def bmp_head(width, height, chanels=3):
          
 ## This function converts RGP to BGR (for .bmp Pictures)
 
-def correct(st, width, height):
+def correct(st, width, height, verbose=False):
     _st = ''
     prcnt = 0
-##    print 'converting a bitmap BGR'
+    if verbose:
+        init=now();print;print '[converting to BGR bitmap',
     init = now()
     st=st[::-1]
     for y in xrange(height):
@@ -463,7 +415,8 @@ def correct(st, width, height):
         if nprcnt<>prcnt:
             print 50+nprcnt, '%'
             prcnt = nprcnt
-##    print 'BGR conversion completed'
+    if verbose:
+        print 'converted', round(now()-init,3), 's]'
     ttime = round(now()-init,3)
     return _st
 
@@ -471,7 +424,6 @@ def correct(st, width, height):
 
 def rev_num(num):
     st = ''
-##    print num
     hnum = '{:0>8s}'.format(hex(num)[2:])
     for x in xrange(3, -1, -1):
         st+=unichr(int(hnum[x*2:x*2+2],16))
@@ -479,7 +431,7 @@ def rev_num(num):
 
 class gen_bmp(threading.Thread):
     def __init__(self, st, width, height, bpp, test, __bytes, e=None, _init=0,
-                 fname='', mem=None):
+                 fname='', mem=None, verbose=False):
         threading.Thread.__init__(self)
         self.st, self.width, self.height, self.bpp, self.test, self.__bytes = \
              st,      width,      height,      bpp,      test,      __bytes
@@ -488,11 +440,14 @@ class gen_bmp(threading.Thread):
         self.fin = False
         self.mem = mem
         self.image = None
+        self.verbose = verbose
 
     def run(self):
-        init = now();print;print '[completing bmp',
+        if self.verbose:
+            init = now();print;print '[completing bmp',
         self.st = comp_bmp(self.st, self.width, self.height, self.bpp, self.__bytes)
-        print 'complete', round(now()-init,3),'s]',
+        if self.verbose:
+            print 'complete', round(now()-init,3),'s]',
 
         p = ImageFile.Parser()
 
@@ -516,7 +471,6 @@ class gen_bmp(threading.Thread):
                 except WindowsError:pass
             else:
                 self.fin = False
-##            self.mem.changeImage(im)
         else:
             fname = self.fname
         for fn in fname:im.save(fn)
@@ -524,20 +478,8 @@ class gen_bmp(threading.Thread):
         if self.mem:
             self.mem.writing=False
 
-##    def canvasImage(self, image):
-##        if not self.image:
-##
-####            image = Image.open("lenna.jpg")
-##            self.image = image
-##            photo = ImageTk.PhotoImage(image)
-##            label = Label(image=photo)
-##            label.image = photo # keep a reference!
-##            label.pack()
-##        else:
-##            label.image = photo
-
-def gen_scene(mem, width, height, frame, path='C:/tmp/tmp.png',nframes=30):
-##    if not mem.pxs:
+def gen_scene(mem, width, height, frame, path='C:/tmp/tmp.png',nframes=30,
+              sphere=True):
     mem.newbitmap()
     coef = 1/float(1800)
     coef2, coef3 = 2, 8
@@ -545,51 +487,78 @@ def gen_scene(mem, width, height, frame, path='C:/tmp/tmp.png',nframes=30):
     width-=2*rad
     x = frame*width/float(nframes)
     init=now();print;print '[ calculating pixels',
-    mem.paintSphere(rad=rad,
-                  origin=[
-                          rad+x,
-                          rad,
-                          rad+10
-##                          x*width/4.0+rad,
-##                          width/4.0+10,
-##                          10
-                          ],
-##                          width/4.0+x*0.5,
-##                          width/4.0+x],
+    if sphere:
+        mem.paintSphere(rad=rad,
+                      origin=[
+                              rad+x,
+                              rad,
+                              rad+10
+                              ],
 
-                  rotation=(
-                             0,
-                            x/float(width)*math.pi*2,
-                            -x/float(width)*math.pi*2),
-                  res=[width, height])
+                      rotation=(
+                                 0,
+                                x/float(width)*math.pi*2,
+                                -x/float(width)*math.pi*2),
+                      res=[width, height])
     print 'calculated', round(now()-init,2), 's ]'
-    
-##    mem.raster(['C:/Pictures/test'+('_'+str(width) if 1 else '')+'.png',
-##                path])#,
-##                'C:/Pictures/test'+('_'+str(width
 
-class canvas(threading.Thread):
+class Video():
 
-    def __init__(self):
-        threading.Thread.__init__(self)
-        self.canvas = None
+    def __init__(self,
+                 binary='./ffmpeg/ffmpeg.exe',
+                 ifor='rawvideo',
+                 ivco='rawvideo',
+                 size='480x270',
+                 pfor='rgb24',
+                 rate=25,
+                 ofor='mp4',
+                 ovco='libx264',
+                 ofnm='test.mp4'
+                 ):
 
-    def run(self):
-        root = Tk()
-        self.canvas = MainWindow(root)
-##                print dir(self.canvas)
-        root.mainloop()
+        self.FFMPEG_BIN = binary
+        self.ifor, self.ivco, self.size, self.pfor, self.rate, self.ofor = \
+            ifor,       ivco,      size,      pfor,  str(rate),     ofor
+        self.ovco, self.ofnm = \
+             ovco,      ofnm
+        self.writing = False
 
-    def changeImage(self, im=None, path=None):
-        while not self.canvas:sleep(0.1)
-        self.canvas.changeImage(im, path)
+    def newVideo(self):
+        self.writing = True
+        self.p = Popen(
+            [
+                self.FFMPEG_BIN,
+                '-y',
+                '-f', self.ifor,
+                '-vcodec', self.ivco,
+                '-s', self.size,
+                '-pix_fmt', self.pfor,
+                '-r', self.rate,
+                '-i', '-',
+                '-an',
+                '-f', self.ofor,
+                '-vcodec', self.ovco,
+                self.ofnm
+                ],
+            stdin = PIPE
+            )
 
+    def save(self, master=None, st=None):
+        if not(master) and not(st):
+            print 'no enough args!';
+            raise
+        elif (master):
+            st=master.st
+        else:pass
+        self.p.stdin.write(st)
+
+    def end(self):
+        self.p.stdin.close()
+        self.writing = False
+            
 if __name__ == '__main__':
     width, height = 400, 300
     p = pixels(width, height);p.newbitmap()
-##    init=now();print '[generating sphere (rot)',
-##    p.paintSphere(rotation=(1, 1, 1))
-##    print 'generated', round(now()-init,3), 's]'
     init=now();print '[generating sphere',
     p.paintSphere(res=[width,height])
     print 'generated', round(now()-init,3), 's]'

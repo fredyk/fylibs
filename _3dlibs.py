@@ -16,6 +16,8 @@
  
 """
 
+# This lib has not already be tested for linux or ios, only for windows
+
 import math
 import threading, ImageFile, os, random
 from time import sleep, time as now

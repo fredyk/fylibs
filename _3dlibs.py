@@ -429,15 +429,7 @@ class pixels():
 
     def raw_image(self):
         print 'generating raw',
-##        return ''.join([
-##            ''.join([
-##                _p if _p else u'\x00\x00\x00'
-##                for _p in p
-##                ])
-##            for p in self.pxs
-##            ])
         return ''.join([
-##            ''.join(p)
             ''.join([
                 _p if _p else u'\x00\x00\x00'
                 for _p in p

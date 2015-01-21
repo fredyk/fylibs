@@ -16,13 +16,13 @@
  
 """
 
-## This lib has not already be tested for linux or ios, only for 
-## windows
+## This lib has not already be tested for linuxs or ios, only
+## for windows
 
 import math
 import threading, ImageFile, os, random
 from time import sleep, time as now
-from canvas_lib import *
+##from canvas_lib import *
 from Tkinter import Tk
 from PIL import ImageTk, Image
 ##            from PIL import Image, ImageTk
@@ -197,12 +197,12 @@ class pixels():
             self.lasts = self.clrs[a][b][c] if ((a)or(b)or(c)) else u'\x00\x00\x00'
         return self.lasts
 
-    def toblack(self, w=None, h=None):
+    def toEmpty(self, w=None, h=None):
         w = self.width if not (w) else w
         h = self.height if not (h) else h
         self.pxs = [
             [
-                u'\x00\x00\x00' for x in xrange(w)
+                u'' for x in xrange(w)
                 ]
             for y in xrange(h)
             ]
@@ -215,7 +215,7 @@ class pixels():
 ##                self.pxs[u[0]][u[1]] = u'\x00\x00\x00'
 ##            self.used = []
 ##        else:
-        self.toblack(w, h)
+        self.toEmpty(w, h)
         self.paintFloor()
         print 'generated', round(now()-init,2),'s ]'
 
@@ -368,9 +368,11 @@ class pixels():
             self.pxst =  bmp_head(len(self.pxs[0]),len(self.pxs))
             init=now();print;print '[rastering',
             prcnt = 0
-##            self.compress()
             self.pxst+=''.join([
-                ''.join(p)
+                ''.join([
+                    _p if _p else u'\x00\x00\x00'
+                    for _p in p
+                    ])
                 for p in self.pxs
                 ])
             print 'rastered', round(now()-init,2), 's ]'
@@ -427,8 +429,19 @@ class pixels():
 
     def raw_image(self):
         print 'generating raw',
+##        return ''.join([
+##            ''.join([
+##                _p if _p else u'\x00\x00\x00'
+##                for _p in p
+##                ])
+##            for p in self.pxs
+##            ])
         return ''.join([
-            ''.join(p)
+##            ''.join(p)
+            ''.join([
+                _p if _p else u'\x00\x00\x00'
+                for _p in p
+                ])
             for p in self.pxs[::-1]
             ])
 

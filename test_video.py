@@ -29,8 +29,8 @@ class video():
         self.frames = []
         self.name = name
         self.ov = Video(
-                         size = '%dx%d' % (width, height),
-                         rate = rate
+                         size = '%dx%d' % (width, height)#,
+                         # other args
             )
         self.writing = False
         self.force = False
@@ -51,14 +51,13 @@ class video():
             self.save(self).start()
 
 def test():
-    width = 320
+    width = 1920
     height = width*9/16
     name = 'tmp'
     print width, height
     seconds = 10
     f = open('C:/tmp/values.txt','w');f.write('');f.close()
     path = './tmp.png'
-    rate = 24
     nframes = rate*seconds
     
     
@@ -72,10 +71,16 @@ def test():
         )
     init = now();print '[ generating video',
     for i in xrange(nframes):
+        _init=now();print;print '[generating frame', i, 'of', nframes,
         gen_scene(mem, width, height, i, path, nframes, sphere=True)
-        _init=now();print '[coding frame', i,
         vi.addFrame(mem.raw_image())
-        print 'coded',round(now()-_init,3),'s]'
+        print '; generated',round(now()-_init,3),'s] remaining:',\
+              round((nframes-i+1)*(now()-init)/float(i+1)/(
+                    1.0 if (((nframes-i+1)*(now()-init)/float(i+1))<60) \
+                    else 60.0
+                  ),3),\
+                  's' if (((nframes-i+1)*(now()-init)/float(i+1))<60) else \
+                  'm'
         if i and not (i%23) and not vi.writing:
 ##        if i and not (i%23) and i<24:
             print '                                             ', vi.writing,

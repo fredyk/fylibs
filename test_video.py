@@ -15,6 +15,9 @@
  
 """
 
+## This lib has not already be tested for linux or ios, only for 
+## windows
+
 import time
 from pipeffmpeg import *  # Download this module from https://github.com/kanryu/pipeffmpeg by kanryu
 ##from graph_lib import *

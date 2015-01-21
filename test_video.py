@@ -1,6 +1,5 @@
 import os, threading
 from _3dlibs import *
-from PIL import Image
 from time import sleep, time as now
 
 class video():

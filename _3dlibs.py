@@ -479,14 +479,16 @@ class gen_bmp(threading.Thread):
             self.mem.writing=False
 
 def gen_scene(mem, width, height, frame, path='C:/tmp/tmp.png',nframes=30,
-              sphere=True):
+              sphere=True, rframe=None, verbose=False):
     mem.newbitmap()
     coef = 1/float(1800)
     coef2, coef3 = 2, 8
     rad = width/4.0
     width-=2*rad
-    x = frame*width/float(nframes)
-    init=now();print;print '[ calculating pixels',
+    x = frame*width/float(nframes+1)
+    x2 = (rframe if rframe else frame)*width/float(nframes)
+    if verbose:
+        init=now();print;print '[ calculating pixels',
     if sphere:
         mem.paintSphere(rad=rad,
                       origin=[
@@ -497,10 +499,11 @@ def gen_scene(mem, width, height, frame, path='C:/tmp/tmp.png',nframes=30,
 
                       rotation=(
                                  0,
-                                x/float(width)*math.pi*2,
-                                -x/float(width)*math.pi*2),
+                                x2/float(width)*math.pi*2,
+                                -x2/float(width)*math.pi*2),
                       res=[width, height])
-    print 'calculated', round(now()-init,2), 's ]'
+    if verbose:
+        print 'calculated', round(now()-init,2), 's ]'
 
 class Video():
 

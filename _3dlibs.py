@@ -325,8 +325,8 @@ class pixels():
         return self
 
     def paintFloor(self):
-        for x in range(0, self.width, self.width/10):
-            for y in xrange(self.width):
+        for x in range(0, self.width+1, self.width/10):
+            for y in xrange(self.width+1):
                 a, b = c3dto2d([x, y, 0],
                                visor=[self.width/2.0,
                                       -self.height*2,
@@ -485,7 +485,9 @@ def gen_scene(mem, width, height, frame, path='C:/tmp/tmp.png',nframes=30,
     coef2, coef3 = 2, 8
     rad = width/4.0
     width-=2*rad
+    height-=2*rad
     x = frame*width/float(nframes+1)
+    z = frame*height/float(nframes+1)
     x2 = (rframe if rframe else frame)*width/float(nframes)
     if verbose:
         init=now();print;print '[ calculating pixels',
@@ -494,7 +496,7 @@ def gen_scene(mem, width, height, frame, path='C:/tmp/tmp.png',nframes=30,
                       origin=[
                               rad+x,
                               rad,
-                              rad+10
+                              rad+z
                               ],
 
                       rotation=(

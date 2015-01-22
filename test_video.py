@@ -52,7 +52,10 @@ class video():
 
 def test():
     width = 1280
-    height = width*3/4
+    height = width*9/16
+    buff = width
+    width = height
+    height = buff
     name = 'tmp'
     print width, height
     seconds = 10

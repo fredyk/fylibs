@@ -51,15 +51,15 @@ class video():
             self.save(self).start()
 
 def test():
-    width = 1920
-    height = width*9/16
+    width = 1280
+    height = width*3/4
     name = 'tmp'
     print width, height
     seconds = 10
     f = open('C:/tmp/values.txt','w');f.write('');f.close()
     path = './tmp.png'
+    rate = 24
     nframes = rate*seconds
-    
     
     mem = pixels(width, height)
 
@@ -72,7 +72,9 @@ def test():
     init = now();print '[ generating video',
     for i in xrange(nframes):
         _init=now();print;print '[generating frame', i, 'of', nframes,
-        gen_scene(mem, width, height, i, path, nframes, sphere=True)
+        gen_scene(mem, width, height,
+                  i*2 if i < nframes/2 else nframes-2*(i-nframes/2),
+                  path, nframes, sphere=True, rframe=i)
         vi.addFrame(mem.raw_image())
         print '; generated',round(now()-_init,3),'s] remaining:',\
               round((nframes-i+1)*(now()-init)/float(i+1)/(

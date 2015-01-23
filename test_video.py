@@ -51,11 +51,7 @@ class video():
             self.save(self).start()
 
 def test():
-    width = 1280
-    height = width*9/16
-    buff = width
-    width = height
-    height = buff
+    width, height = exch(320, 320*3/4)
     name = 'tmp'
     print width, height
     seconds = 10
@@ -87,7 +83,6 @@ def test():
                   's' if (((nframes-i+1)*(now()-init)/float(i+1))<60) else \
                   'm'
         if i and not (i%23) and not vi.writing:
-##        if i and not (i%23) and i<24:
             print '                                             ', vi.writing,
             vi.saveVideo()
             sleep(0.1)

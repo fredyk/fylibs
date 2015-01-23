@@ -20,14 +20,19 @@
 ## for windows
 
 import math
+from time import time as now
+import time, math, random
+##from subprocess import PIPE, STDOUT, Popen
 import threading, ImageFile, os, random
 from time import sleep, time as now
 from Tkinter import Tk
 from PIL import ImageTk, Image
 from subprocess import Popen, PIPE
-from time import time as now
-import time, math, random
-##from subprocess import PIPE, STDOUT, Popen
+def exch(a, b):buff=a;a=b;b=buff;return (a, b)
+def putInFile(path, st, enc=None):f=open(path,'wb');f.write((
+    st if (type(st)==str) else ''.join([s for s in st])).encode(
+        'iso-8859-1' if not enc else enc));f.close();return(
+            st if (type(st)==str) else ''.join([s for s in st]))
 
 def trygon_signs(a, b=None):
     a, b = [x for x in a] if (b is None) else (a, b)
@@ -68,8 +73,6 @@ def dist(a, _b, c=None, d=None):
 def c3dto2d(a, b=None, c=None, visor=[1920/2, -1920, 1080/2], _int=False): #[x, y, z]
     x, y, z = (a) if (not(b) and not(c)) else (a, b, c)
     vx, vy, vz = visor
-##    print (vx-x)/float((vz-z))*(0-z), \
-##          '\n           ', (vy-y)/float((vz-z))*(0-z)
     return (
             int(x+(vx-x)/float((vy-y))*(0-y)), #x1
             int(z+(vz-z)/float((vy-y))*(0-y))  #y1
@@ -81,19 +84,11 @@ def c3dto2d(a, b=None, c=None, visor=[1920/2, -1920, 1080/2], _int=False): #[x, 
 def _rot(cords, center, angle):
     x0, y0 = cords if type(cords)==tuple else [c for c in cords]
     cx, cy = center if type(center)==tuple else [c for c in center]
-##    rx, ry = angle if type(angle)==tuple else [a for a in angle]
     rz = angle
     a = dist((x0, y0),(cx, cy))# * (-1 if ((((x0-cx)>=0)and((y0-cy)<0))or\
 ##                                          (((y0-cy)>=0)and((x0-cx)<0))) else 1)
-    
-##    beta = (math.atan((y0-cy)/float(x0-cx)) if (x0-cx)<>0 else math.pi/2.0)
     beta = ang((x0-cx, y0-cy))
-##    if ((y0-cy)<0)and((x0-cx)<0):
-##        beta+=math.pi
-##    elif ((y0-cy)>0)and((x0-cx)<0):
-##        beta+=math.pi
     alpha_beta = rz + beta
-##    print a, alpha_beta,
     return (
         cx + a * \
             math.cos(alpha_beta),
@@ -105,42 +100,156 @@ def rot(cords, center, angle):
     rx, ry, rz = angle# if type(angle)==tuple else [a for a in angle]
     x0, y0, z0 = cords# if type(cords)==tuple else [c for c in cords]
     cx, cy, cz = center# if type(center)==tuple else [c for c in center]
-##    print x0, y0, z0
 
     y0, z0 = _rot((y0, z0), (cy, cz), rx) if rx else (y0, z0)
-##    print x0, y0, z0
     x0, z0 = _rot((x0, z0), (cx, cz), ry) if ry else (x0, z0)
-##    print x0, y0, z0
     x0, y0 = _rot((x0, y0), (cx, cy), rz) if rz else (x0, y0)
-##    print x0, y0, z0
     return x0, y0, z0
-##    print math.atan((y0-cy)/float(x0-cx)), (y0-cy)/float(x0-cx)
-##    return (
-##        dist((x0, y0),(cx, cy)) * \
-##            math.cos(rz+math.atan((y0-cy)/float(x0-cx))),
-##        y0,
-##        z0
-##        )
 
-if __name__ == '__main__':
-##    for y in xrange(0, 1080, 100):
-##        for x in xrange(0, 1920, 100):
-##            x, y, z = x, y, 1
-##            print [x, y, z], c2dto3d([x, y, z], _int=True)
-##    for x in xrange(-1, 2, 2):
-##        for y in xrange(-1, 2, 2):
-####            for z in xrange(-1, 2, 2):
-##            x, y, z = x, y, 0
-##            print [x, y, z], rot((x, y, z), (0, 0, 0), [0, 0, 1])
-##        math.pi/4.0,
-##        math.pi/4.0,
-##        math.pi/4.0])
-    print rot(
-##        rot((1, 0, 0), (0, 0, 0), (math.pi/2.0, 0, 1)),
-        (1, 0, 0),
-        (0, 0, 0), (0, 0, -1)
+def _16b(a=None):return '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'+\
+                        '\x00\x00\x00\x00' if not(a) else \
+                        u'\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff'+\
+                        u'\xff\xff\xff\xff'
+def _32b():   return ''.join([_16b() for x in xrange(2)])
+def _64b():   return ''.join([_32b() for x in xrange(2)])
+def _128b():  return ''.join([_64b() for x in xrange(2)])
+def _256b():  return ''.join([_128b() for x in xrange(2)])
+def _512b():  return ''.join([_256b() for x in xrange(2)])
+def _1024b(): return ''.join([_512b() for x in xrange(2)])
+def _2048b(): return ''.join([_1024b() for x in xrange(2)])
+def _4096b(): return ''.join([_2048b() for x in xrange(2)])
+def _2kb():   return ''.join([_4096b() for x in xrange(2)])
+def _4kb():   return ''.join([_2kb() for x in xrange(2)])
+def _8kb():   return ''.join([_4kb() for x in xrange(2)])
+def _16kb():  return ''.join([_8kb() for x in xrange(2)])
+def _32kb():  return ''.join([_16kb() for x in xrange(2)])
+def _64kb():  return ''.join([_32kb() for x in xrange(2)])
+def _128kb(): return ''.join([_64kb() for x in xrange(2)])
+def _256kb(): return ''.join([_128kb() for x in xrange(2)])
+def _512kb(): return ''.join([_256kb() for x in xrange(2)])
+def _1mb():   return ''.join([_512kb() for x in xrange(2)])
+def _2mb():   return ''.join([_1mb() for x in xrange(2)])
+def _4mb():   return ''.join([_2mb() for x in xrange(2)])
+def _8mb():   return ''.join([_4mb() for x in xrange(2)])
+##/*
+def _177kb(): return _128kb()+_32kb()+_16kb()+_1024b()      #//
+##*/
+class Bytes():
+
+    def __init__(self):
+        
+        self._16b, self._32b, self._64b, self._128b, self._256b, self._512b = \
+             _16b(),    _32b(),    _64b(),    _128b(),    _256b(),    _512b()
+        
+        self._16kb, self._32kb, self._64kb, self._128kb, self._256kb, self._512kb = \
+             _16kb(),    _32kb(),    _64kb(),    _128kb(),    _256kb(),    _512kb()
+        
+        self._4mb, self._2mb, self._1mb = \
+             _4mb(),    _2mb(),    _1mb()
+
+def comp_bmp(_st, width, height, bpp, __bytes=None,
+             _len=None): # '...', n, n, (def:24)
+    if(not(__bytes)):__bytes=Bytes()
+    _b = __bytes
+    st = _st
+    _len, ilen = (0x36+bpp/0x8*width*height) if not _len else _len, len(st)
+    _top = _len+0x1
+    __512kb,     __256kb,   __128kb,   __64kb,   __32kb,   __16kb = \
+    _b._512kb, _b._256kb, _b._128kb, _b._64kb, _b._32kb, _b._16kb
+    __4mb, __2mb, __1mb = _b._4mb, _b._2mb, _b._1mb
+    while(len(st)<_top-0x400000):st+=__4mb;print '4mb',
+    while(len(st)<_top-0x200000):st+=__2mb;print '2mb',
+    while(len(st)<_top-0x100000):st+=__1mb;print '1mb',
+    while(len(st)<_top-0x80000):st+=__512kb;print '512kb',
+    while(len(st)<_top-0x40000):st+=__256kb;print '256kb',
+    while(len(st)<_top-0x20000):st+=__128kb;print '128kb',
+    while(len(st)<_top-0x10000):st+=__64kb;print '64kb',
+    while(len(st)<_top-0x8000):st+=__32kb;print '32kb',
+    while(len(st)<_top-0x4000):st+=__16kb;print '16kb',
+    while(len(st)<_top-0x2000):st+=_8kb();print '8kb',
+    while(len(st)<_top-0x1000):st+=_4kb();print '4kb',
+    while(len(st)<_top-0x800):st+=_2kb();print '2kb',
+    while(len(st)<_top-0x400):st+=_1024b();print '1kb',
+    while(len(st)<_top-0x200):st+=_512b();print '512b',
+    while(len(st)<_top-0x100):st+=_256b();print '256b',
+    while(len(st)<_top-0x80):st+=_128b();print '128b',
+    while(len(st)<_top-0x40):st+=_64b();print '64b',
+    while(len(st)<_top-0x20):st+=_32b();print '32b',
+    while(len(st)<_top-0x10):st+=_16b();print '16b',
+    while(len(st)<_len):st+='\x00'
+    return st
+
+def test_mem():
+    max = 0.0
+    for x in xrange(0x40):
+        st = u''
+        sst = ''
+        cf = 1
+        inc = 0x20000
+        print '                   ', x
+        while len(sst)<0x1000000:
+            init = now()
+            try:
+                st+=sst
+            
+                if((now()-init)>0)and((len(sst)/float(now()-init))>max):
+                    max = len(sst)/float(now()-init)
+                    print len(sst), (now()-init)*7*0x1000000/float(len(sst)),\
+                          max, len(sst)/float(1024),'kB'
+            except MemoryError:break
+            sst+=''.join('\x00' for x in xrange(inc))
+
+def aleatCenters(a, b, c,mem):#width, height
+    return [
+        (
+            int(math.floor(random.random()*a)),
+            int(math.floor(random.random()*b))
+            ) for x in range(c)
+        ]
+
+def distances(a, b, _centers):
+    return (
+        math.sqrt((a-_centers[x][0])**2+(b-_centers[x][1])**2) \
+        for x in range(len(_centers))
         )
-# -*- coding: iso-8859-1 -*-
+
+
+
+def calcx(y, width, height, mem, arr=None):
+    centers = arr
+    st = u''
+    for x in xrange(width):
+        _i = _intensities = [((255-int(math.ceil(n*255/float(mem.rad)))) \
+                              if (n<mem.rad) else 0)
+                             for n in distances(x, y, centers)]
+        a, b, c = max(_i[0], _i[3], _i[5]),\
+                  max(_i[1], _i[3], _i[4]), \
+                  max(_i[2], _i[4], _i[5])
+
+        if (a, b, c)<>mem.last:
+            st+=mem.px2(a,b,c)
+        else:
+            st+=mem.lasts
+    return st
+
+def calcy(width, height, bpp, test, st, mem, gen_bmp, arr=None):
+    init=now();print;print 'Generating BMP bitmap..',
+    centers = arr
+    prcnt = 0
+    for y in xrange(height-1, -1, -1):
+
+        st+=calcx(y, width, height, mem, centers)
+
+        nper = ((height-y)*width)/float(width*height)
+        if(nper>=prcnt+0.1):
+            _init = now()
+            print '[',
+            prcnt = nper
+            print round(prcnt*100,1),'%',
+            bm = gen_bmp(st, width, height, bpp, test,mem.bytes,_init=_init)
+            bm.start()
+    print '[generated', round(now()-init,3), 's]'
+    return st
 
 def unichrs():
     return [
@@ -349,7 +458,7 @@ class pixels():
             prcnt = 0
             self.pxst+=''.join([
                 ''.join([
-                    _p if _p else u'\x00\x00\x00'
+                    _p[::-1] if _p else u'\x00\x00\x00'
                     for _p in p
                     ])
                 for p in self.pxs
@@ -560,193 +669,3 @@ class Video():
     def end(self):
         self.p.stdin.close()
         self.writing = False
-            
-if __name__ == '__main__':
-    width, height = 400, 300
-    p = pixels(width, height);p.newbitmap()
-    init=now();print '[generating sphere',
-    p.paintSphere(res=[width,height])
-    print 'generated', round(now()-init,3), 's]'
-    p.raster()
-
-def _16b(a=None):return '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'+\
-                        '\x00\x00\x00\x00' if not(a) else \
-                        u'\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff'+\
-                        u'\xff\xff\xff\xff'
-def _32b():   return ''.join([_16b() for x in xrange(2)])
-def _64b():   return ''.join([_32b() for x in xrange(2)])
-def _128b():  return ''.join([_64b() for x in xrange(2)])
-def _256b():  return ''.join([_128b() for x in xrange(2)])
-def _512b():  return ''.join([_256b() for x in xrange(2)])
-def _1024b(): return ''.join([_512b() for x in xrange(2)])
-def _2048b(): return ''.join([_1024b() for x in xrange(2)])
-def _4096b(): return ''.join([_2048b() for x in xrange(2)])
-def _2kb():   return ''.join([_4096b() for x in xrange(2)])
-def _4kb():   return ''.join([_2kb() for x in xrange(2)])
-def _8kb():   return ''.join([_4kb() for x in xrange(2)])
-def _16kb():  return ''.join([_8kb() for x in xrange(2)])
-def _32kb():  return ''.join([_16kb() for x in xrange(2)])
-def _64kb():  return ''.join([_32kb() for x in xrange(2)])
-def _128kb(): return ''.join([_64kb() for x in xrange(2)])
-def _256kb(): return ''.join([_128kb() for x in xrange(2)])
-def _512kb(): return ''.join([_256kb() for x in xrange(2)])
-def _1mb():   return ''.join([_512kb() for x in xrange(2)])
-def _2mb():   return ''.join([_1mb() for x in xrange(2)])
-def _4mb():   return ''.join([_2mb() for x in xrange(2)])
-def _8mb():   return ''.join([_4mb() for x in xrange(2)])
-##/*
-def _177kb(): return _128kb()+_32kb()+_16kb()+_1024b()      #//
-##*/
-class Bytes():
-
-    def __init__(self):
-        
-        self._16b, self._32b, self._64b, self._128b, self._256b, self._512b = \
-             _16b(),    _32b(),    _64b(),    _128b(),    _256b(),    _512b()
-        
-        self._16kb, self._32kb, self._64kb, self._128kb, self._256kb, self._512kb = \
-             _16kb(),    _32kb(),    _64kb(),    _128kb(),    _256kb(),    _512kb()
-        
-        self._4mb, self._2mb, self._1mb = \
-             _4mb(),    _2mb(),    _1mb()
-
-def comp_bmp(_st, width, height, bpp, __bytes=None,
-             _len=None): # '...', n, n, (def:24)
-    if(not(__bytes)):__bytes=Bytes()
-    _b = __bytes
-    st = _st
-    _len, ilen = (0x36+bpp/0x8*width*height) if not _len else _len, len(st)
-    _top = _len+0x1
-    __512kb,     __256kb,   __128kb,   __64kb,   __32kb,   __16kb = \
-    _b._512kb, _b._256kb, _b._128kb, _b._64kb, _b._32kb, _b._16kb
-    __4mb, __2mb, __1mb = _b._4mb, _b._2mb, _b._1mb
-##    while(len(st)<_top-0x80000):st+=__512kb;print '512kb',
-##    while(len(st)<_top-0x40000):st+=__256kb;print '256kb',
-##    while(len(st)<_top-0xb1):st+=_177kb();print '177kb',     
-##//
-    while(len(st)<_top-0x400000):st+=__4mb;print '4mb',
-    while(len(st)<_top-0x200000):st+=__2mb;print '2mb',
-    while(len(st)<_top-0x100000):st+=__1mb;print '1mb',
-    while(len(st)<_top-0x80000):st+=__512kb;print '512kb',
-    while(len(st)<_top-0x40000):st+=__256kb;print '256kb',
-    while(len(st)<_top-0x20000):st+=__128kb;print '128kb',
-    while(len(st)<_top-0x10000):st+=__64kb;print '64kb',
-    while(len(st)<_top-0x8000):st+=__32kb;print '32kb',
-    while(len(st)<_top-0x4000):st+=__16kb;print '16kb',
-    while(len(st)<_top-0x2000):st+=_8kb();print '8kb',
-    while(len(st)<_top-0x1000):st+=_4kb();print '4kb',
-    while(len(st)<_top-0x800):st+=_2kb();print '2kb',
-    while(len(st)<_top-0x400):st+=_1024b();print '1kb',
-    while(len(st)<_top-0x200):st+=_512b();print '512b',
-    while(len(st)<_top-0x100):st+=_256b();print '256b',
-    while(len(st)<_top-0x80):st+=_128b();print '128b',
-    while(len(st)<_top-0x40):st+=_64b();print '64b',
-    while(len(st)<_top-0x20):st+=_32b();print '32b',
-    while(len(st)<_top-0x10):st+=_16b();print '16b',
-    while(len(st)<_len):st+='\x00'
-    return st
-
-def test_mem():
-    max = 0.0
-    for x in xrange(0x40):
-        st = u''
-        sst = ''
-        cf = 1
-        inc = 0x20000
-        print '                   ', x
-        while len(sst)<0x1000000:
-            init = now()
-            try:
-                st+=sst
-            
-                if((now()-init)>0)and((len(sst)/float(now()-init))>max):
-                    max = len(sst)/float(now()-init)
-                    print len(sst), (now()-init)*7*0x1000000/float(len(sst)), max, len(sst)/float(1024),'kB'
-##                    inc = 0x1
-            except MemoryError:break
-##                st, sst = '', ''
-            sst+=''.join('\x00' for x in xrange(inc))
-##            time.sleep(0.001)
-
-def aleatCenters(a, b, c,mem):#width, height
-    return [
-        (
-            int(math.floor(random.random()*a)),
-            int(math.floor(random.random()*b))
-            ) for x in range(c)
-        ]
-##    centers = []
-##    for x in xrange(c):
-##        centers.append(
-##            (
-##            int(math.floor(random.random()*a)),
-##            int(math.floor(random.random()*b))
-##                )
-##            )
-##        while(len(centers)>1) and (dist(centers[-1],centers[-2])>mem.rad):
-##            centers[-1] = (
-##                (
-##                int(math.floor(random.random()*a)),
-##                int(math.floor(random.random()*b))
-##                    )
-##                )
-##    return centers
-
-def distances(a, b, _centers):
-##    print _centers
-    return (
-        math.sqrt((a-_centers[x][0])**2+(b-_centers[x][1])**2) \
-        for x in range(len(_centers))
-        )
-
-
-
-def calcx(y, width, height, mem, arr=None):
-    centers = arr
-    st = u''
-    for x in xrange(width):
-    ##    a, b, c = 255-int(math.floor(((y*raty)+(x*ratx))/2.0)), \
-    ##              int(math.floor(y*raty)), \
-    ##              int(math.floor(x*ratx))
-        _i = _intensities = [((255-int(math.ceil(n*255/float(mem.rad)))) \
-                              if (n<mem.rad) else 0)
-                             for n in distances(x, y, centers)]
-    ##    a,b, c = \
-    ##         int(math.floor(random.random()*255)), \
-    ##         int(math.floor(random.random()*255)), \
-    ##         int(math.floor(random.random()*255))
-    ##    a, b, c = 0, \
-    ##              int(math.floor(x*255/float(width))), \
-    ##              int(math.floor((width-x)*255/float(width)))
-        a, b, c = max(_i[0], _i[3], _i[5]),\
-                  max(_i[1], _i[3], _i[4]), \
-                  max(_i[2], _i[4], _i[5])
-
-        if (a, b, c)<>mem.last:
-            st+=mem.px2(a,b,c)
-        else:
-            st+=mem.lasts
-    return st
-
-def calcy(width, height, bpp, test, st, mem, gen_bmp, arr=None):
-    init=now();print;print 'Generating BMP bitmap..',
-    centers = arr
-    prcnt = 0
-    for y in xrange(height-1, -1, -1):
-
-        st+=calcx(y, width, height, mem, centers)
-
-        nper = ((height-y)*width)/float(width*height)
-        if(nper>=prcnt+0.1):
-            _init = now()
-            print '[',
-            prcnt = nper
-            print round(prcnt*100,1),'%',
-            bm = gen_bmp(st, width, height, bpp, test,mem.bytes,_init=_init)
-            bm.start()
-    print '[generated', round(now()-init,3), 's]'
-    return st
-
-if __name__ == '__main__':pass
-##    test_mem()
-##    print _1mb()

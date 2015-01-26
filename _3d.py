@@ -1,54 +1,10 @@
 import os, threading
-from _3dlibs import *
+import ImageFile, random, math
 from time import sleep, time as now
-
-class video():
-
-    class save(threading.Thread):
-
-        def __init__(self, sup):
-            threading.Thread.__init__(self)
-            self.sup = sup
-            self.ov = sup.ov
-            self.name = sup.name
-            self.frames = sup.frames
-
-        def run(self):
-            self.ov.ofnm = './video/'+self.name+'.mp4'
-            self.ov.newVideo()
-            init=now();print;print '[writing video',
-            for i, x in enumerate(self.frames):
-                if self.sup.force:
-                    print 'writing frame', i
-                self.ov.save(st=x)
-            self.ov.end()
-            self.sup.writing = False
-            print;print 'written',round(now()-init,3),'s]'
-
-    def __init__(self, width, height, rate, name):
-        self.frames = []
-        self.name = name
-        self.ov = Video(
-                         size = '%dx%d' % (width, height)#,
-                         # other args
-            )
-        self.writing = False
-        self.force = False
-
-    def addFrame(self, st):
-        self.frames.append(st.encode('iso-8859-1'))
-
-    def saveVideo(self, force=False):
-        self.force = force
-        if not os.path.lexists('./video/'):
-            os.makedirs('./video/')
-        if force and (self.ov.writing):
-            print 'forcing subprocess to close'
-            self.ov.close()
-        if (not self.ov.writing) or force:
-            print self.ov.writing,
-            self.writing = True
-            self.save(self).start()
+from PIL import ImageTk, Image
+from subprocess import Popen, PIPE
+import sys
+from _3dlib import *
 
 def test():
     width, height = exch(320, 320*3/4)
@@ -93,3 +49,4 @@ def test():
     
 if __name__ == '__main__':
     test()
+

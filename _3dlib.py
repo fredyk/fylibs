@@ -16,24 +16,21 @@
  
 """
 
-## This lib has not already be tested for linuxs or ios, only
-## for windows
+## This program has only be tested for windows
 
-import math
-from time import time as now
-import time, math, random
-##from subprocess import PIPE, STDOUT, Popen
-import threading, ImageFile, os, random
+## -*- coding: iso-8859-1 -*-
+import os, threading
+import ImageFile, random, math
 from time import sleep, time as now
-from Tkinter import Tk
 from PIL import ImageTk, Image
 from subprocess import Popen, PIPE
+import sys
+
 def exch(a, b):buff=a;a=b;b=buff;return (a, b)
 def putInFile(path, st, enc=None):f=open(path,'wb');f.write((
     st if (type(st)==str) else ''.join([s for s in st])).encode(
         'iso-8859-1' if not enc else enc));f.close();return(
             st if (type(st)==str) else ''.join([s for s in st]))
-
 def trygon_signs(a, b=None):
     a, b = [x for x in a] if (b is None) else (a, b)
     return (
@@ -105,7 +102,6 @@ def rot(cords, center, angle):
     x0, z0 = _rot((x0, z0), (cx, cz), ry) if ry else (x0, z0)
     x0, y0 = _rot((x0, y0), (cx, cy), rz) if rz else (x0, y0)
     return x0, y0, z0
-
 def _16b(a=None):return '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'+\
                         '\x00\x00\x00\x00' if not(a) else \
                         u'\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff'+\
@@ -213,43 +209,6 @@ def distances(a, b, _centers):
         for x in range(len(_centers))
         )
 
-
-
-def calcx(y, width, height, mem, arr=None):
-    centers = arr
-    st = u''
-    for x in xrange(width):
-        _i = _intensities = [((255-int(math.ceil(n*255/float(mem.rad)))) \
-                              if (n<mem.rad) else 0)
-                             for n in distances(x, y, centers)]
-        a, b, c = max(_i[0], _i[3], _i[5]),\
-                  max(_i[1], _i[3], _i[4]), \
-                  max(_i[2], _i[4], _i[5])
-
-        if (a, b, c)<>mem.last:
-            st+=mem.px2(a,b,c)
-        else:
-            st+=mem.lasts
-    return st
-
-def calcy(width, height, bpp, test, st, mem, gen_bmp, arr=None):
-    init=now();print;print 'Generating BMP bitmap..',
-    centers = arr
-    prcnt = 0
-    for y in xrange(height-1, -1, -1):
-
-        st+=calcx(y, width, height, mem, centers)
-
-        nper = ((height-y)*width)/float(width*height)
-        if(nper>=prcnt+0.1):
-            _init = now()
-            print '[',
-            prcnt = nper
-            print round(prcnt*100,1),'%',
-            bm = gen_bmp(st, width, height, bpp, test,mem.bytes,_init=_init)
-            bm.start()
-    print '[generated', round(now()-init,3), 's]'
-    return st
 
 def unichrs():
     return [
@@ -619,7 +578,7 @@ def gen_scene(mem, width, height, frame, path='C:/tmp/tmp.png',nframes=30,
 class Video():
 
     def __init__(self,
-                 binary='./ffmpeg/ffmpeg.exe',
+                 binary='C:/Python27/flib/ffmpeg/ffmpeg.exe',
                  ifor='rawvideo',
                  ivco='rawvideo',
                  size='480x270',
@@ -669,3 +628,52 @@ class Video():
     def end(self):
         self.p.stdin.close()
         self.writing = False
+
+class video():
+
+    class save(threading.Thread):
+
+        def __init__(self, sup):
+            threading.Thread.__init__(self)
+            self.sup = sup
+            self.ov = sup.ov
+            self.name = sup.name
+            self.frames = sup.frames
+
+        def run(self):
+            self.ov.ofnm = './video/'+self.name+'.mp4'
+            self.ov.newVideo()
+            init=now();print;print '[writing video',
+            for i, x in enumerate(self.frames):
+                if self.sup.force:
+                    print 'writing frame', i
+                self.ov.save(st=x)
+            self.ov.end()
+            self.sup.writing = False
+            print;print 'written',round(now()-init,3),'s]'
+
+    def __init__(self, width, height, rate, name):
+        self.frames = []
+        self.name = name
+        self.ov = Video(
+                         size = '%dx%d' % (width, height)#,
+                         # other args
+            )
+        self.writing = False
+        self.force = False
+
+    def addFrame(self, st):
+        self.frames.append(st.encode('iso-8859-1'))
+
+    def saveVideo(self, force=False):
+        self.force = force
+        if not os.path.lexists('./video/'):
+            os.makedirs('./video/')
+        if force and (self.ov.writing):
+            print 'forcing subprocess to close'
+            self.ov.close()
+        if (not self.ov.writing) or force:
+            print self.ov.writing,
+            self.writing = True
+            self.save(self).start()
+
